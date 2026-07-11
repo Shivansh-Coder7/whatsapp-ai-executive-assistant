@@ -1,4 +1,4 @@
-# AI WhatsApp Executive Assistant -- Positiveway Solutions
+# AI WhatsApp Executive Assistant 
 
 ## What makes this build different
 Instead of keyword matching against the knowledge base, this project uses
