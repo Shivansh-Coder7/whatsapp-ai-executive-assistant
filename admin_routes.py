@@ -3,16 +3,24 @@ Minimal admin API -- protected by a single shared password (fine for a
 4-day intern project; note in your README this would use real auth in
 production). Powers the admin dashboard bonus feature.
 """
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, Header
+from fastapi.responses import FileResponse
 from config.settings import settings
 from database.db import search_conversations, get_all_meetings, get_conn
 from chatbot.knowledge_retrieval import kb
 
 router = APIRouter()
 
+DASHBOARD_PATH = Path(__file__).parent.parent / "templates" / "admin_dashboard.html"
+
 def check_admin(x_admin_password: str = Header(None)):
     if x_admin_password != settings.ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Invalid admin password")
+
+@router.get("/admin/dashboard")
+def admin_dashboard():
+    return FileResponse(DASHBOARD_PATH)
 
 @router.get("/admin/conversations")
 def list_conversations(keyword: str = "", x_admin_password: str = Header(None)):
