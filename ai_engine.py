@@ -8,7 +8,7 @@ from config.settings import settings
 from database.db import get_recent_history
 
 genai.configure(api_key=settings.GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-flash-latest")
 
 SYSTEM_PROMPT = """You are the official WhatsApp Executive Assistant for
 Positiveway Solutions Pvt. Ltd. Be professional, warm, and concise (WhatsApp
