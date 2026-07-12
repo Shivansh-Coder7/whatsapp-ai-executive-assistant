@@ -29,27 +29,29 @@ async def whatsapp_webhook(request: Request):
 
 
 def handle_incoming_message(user_number: str, incoming_msg: str) -> str:
-    # If user is mid-way through booking a meeting, keep routing there
-    # regardless of what they type, until the flow completes.
-    if is_in_meeting_flow(user_number):
-        reply_text, _ = handle_meeting_step(user_number, incoming_msg)
-        save_conversation(user_number, incoming_msg, reply_text, "meeting_request", 1.0)
+    try:
+        if is_in_meeting_flow(user_number):
+            reply_text, _ = handle_meeting_step(user_number, incoming_msg)
+            save_conversation(user_number, incoming_msg, reply_text, "meeting_request", 1.0)
+            return reply_text
+
+        intent = detect_intent(incoming_msg)
+
+        if intent == "meeting_request":
+            reply_text = start_meeting_flow(user_number)
+            save_conversation(user_number, incoming_msg, reply_text, intent, 1.0)
+            return reply_text
+
+        matches, confidence = kb.search(incoming_msg)
+        confident = kb.is_confident(confidence)
+        reply_text = generate_reply(
+            user_number, incoming_msg,
+            kb_context=matches if confident else None,
+            kb_confident=confident
+        )
+        save_conversation(user_number, incoming_msg, reply_text, intent, confidence)
         return reply_text
-
-    intent = detect_intent(incoming_msg)
-
-    if intent == "meeting_request":
-        reply_text = start_meeting_flow(user_number)
-        save_conversation(user_number, incoming_msg, reply_text, intent, 1.0)
-        return reply_text
-
-    # internship_query and general_query both go through KB retrieval + Gemini
-    matches, confidence = kb.search(incoming_msg)
-    confident = kb.is_confident(confidence)
-    reply_text = generate_reply(
-        user_number, incoming_msg,
-        kb_context=matches if confident else None,
-        kb_confident=confident
-    )
-    save_conversation(user_number, incoming_msg, reply_text, intent, confidence)
-    return reply_text
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return f"DEBUG ERROR: {type(e).__name__}: {str(e)}"
